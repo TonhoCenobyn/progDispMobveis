@@ -1,8 +1,10 @@
 import 'package:flutter_modular/flutter_modular.dart';
 
 import 'emissao/formulario/detalhes_step1.dart';
+import 'emissao/gts_emissao_module.dart';
 import 'emissao/gts_emissao_page.dart';
 import 'gts_module_controller.dart';
+import 'historico/gts_historico_module.dart';
 import 'home/gts_home_page.dart';
 import 'service/gts_service.dart';
 import 'service/gts_service.dart';
@@ -30,11 +32,19 @@ class GtsModule extends Module {
         "/home",
         child: (context, args) => const GtsHomePage(),
       ),
-      ChildRoute(
+      ModuleRoute(
+        '/emissao',
+        module: GtsEmissaoModule(), // ✅ CORRETO: Modular carrega os binds de emissão
+      ),
+      ModuleRoute(
+        '/historico',
+        module: GtsHistoricoModule(), // ✅ CORRETO: Modular carrega os binds de emissão
+      ),
+      /*ChildRoute(
         "/emissao",
         child: (context, args) => const GtsEmissaoPage(),
         transition: TransitionType.rightToLeft,
-      ),
+      ),*/
     ]),
   ];
 }

@@ -1,9 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_modular/flutter_modular.dart';
 import 'package:mobx/mobx.dart';
+import '../../../shared/login/model/empresa_model.dart';
+import '../../../shared/login/service/empresa_service.dart';
+import '../../../shared/login/service/login_service.dart';
+import '../models/destino_model.dart';
+import '../models/gts_model.dart';
+import '../models/subproduto_model.dart';
+import '../service/gts_service.dart';
 
 enum GtsStatus { AGUARDA_UPLOAD, OUTRO_STATUS }
 
 class GtsEmissaoController {
+  final EmpresaService _empresaService = Modular.get<EmpresaService>();
+  final GtsService _gtsService = Modular.get<GtsService>();
+
+  var user = Modular.get<LoginService>().usuarioLogado;
+
+  var empresaUser;
+
+  @observable
+  List<dynamic> tiposSubprodutos = [];
+
   @observable
   bool loading = false;
 
@@ -32,6 +50,9 @@ class GtsEmissaoController {
   bool get canFinishForm => doneSteps.length == totalSteps;
 
   // --- Actions ---
+  void initState() {
+    getEmpresaUser();
+  }
 
   @action
   void setLoading(bool value) {
@@ -83,12 +104,10 @@ class GtsEmissaoController {
     }
   }
 
-  // Ação para marcar etapa como concluída (usada no botão Avançar)
   @action
   void markStepAsCompleted(int stepIndex) {
     if (!doneSteps.contains(stepIndex)) {
       doneSteps.add(stepIndex);
-      // doneSteps.sort(); // Ordenar se necessário
     }
   }
 
@@ -100,6 +119,33 @@ class GtsEmissaoController {
   bool canNavigateToStep(int stepIndex) {
     return stepIndex < detalhesIndex || doneSteps.contains(stepIndex) || stepIndex == detalhesIndex + 1;
   }
+
+  Future<void> loadTiposSubprodutosList() async {
+    try {
+      final tiposSubprodutosList = await _gtsService.getAllTiposSubprodutos();
+      print('Retorno do service: $tiposSubprodutosList');
+      tiposSubprodutos = tiposSubprodutosList;
+
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<void> getEmpresaUser() async {
+    loading = true;
+
+    if (user?.uuid != null) {
+       List<EmpresaModel> aux = await EmpresaService().getEmpresasByUsuario(user!.uuid!);
+        empresaUser = aux[0];
+
+        print(aux[0].toJson());
+        //empresaUser = empresa;
+    } else {
+      print("Empresa nao encontrada");
+    }
+    loading = false;
+  }
+
 
   // --- Lifecycle ---
 
@@ -117,5 +163,43 @@ class GtsEmissaoController {
     print('Disposing GtsEmissaoController');
     pageController.dispose();
   }
+
+  GtsModel construirGtsModelParaEnvio() {
+    final dados = gtsFormData[currentGtsIndex];
+
+    return GtsModel(
+      origemNomeFantasia: dados['origemNomeFantasia'],
+      origemCpfCnpj: dados['origemCpfCnpj'],
+      origemInscricaoEstadual: dados['origemInscricaoEstadual'],
+
+      tipoSubproduto: dados['tipoSubproduto'],
+      transporte: dados['transporte'],
+      dataValidade: dados['dataValidade'],
+      lacre: List<String>.from(dados['lacre'] ?? []),
+
+      descricao: dados['descricao'],
+      destino: DestinoModel(
+        nome: dados['destinoNomeFantasia'],
+        cnpjCpf: dados['destinoCpfCnpj'],
+        cep: dados['destinoCep'],
+        logradouro: dados['destinoLogradouro'],
+        numero: dados['destinoNumero'],
+        complemento: dados['destinoComplemento'],
+        cidade: dados['destinoMunicipio'],
+        uf: dados['destinoUF'],
+      ),
+      subprodutos: [
+        SubprodutoModel(
+          quantidade: dados['quantidade'],
+          lote: dados['lote'],
+          peso: dados['peso'],
+          //tratamento: dados['tratamento'], // novo campo
+          finalidade: dados['finalidade'],
+          unidadeMedida: dados['unidadeMedida'],
+        )
+      ],
+    );
+  }
+
 }
 

@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:flutter_modular/flutter_modular.dart';
+
+import '../../models/tipo_subproduto_model.dart';
+import '../gts_emissao_controller.dart';
 
 class DetalhesStep3Page extends StatefulWidget {
   // Callbacks para navegação
@@ -20,19 +25,34 @@ class _DetalhesStep3PageState extends State<DetalhesStep3Page> {
   String? _selectedTipoGts;
   String? _selectedTransporte;
   String? _selectedFinalidade;
+  DateTime? _dataSelecionada;
+  final GtsEmissaoController controller = Modular.get<GtsEmissaoController>();
 
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _lacreController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   final List<String> _lacresAdicionados = [];
-  // -------------------------
+
+  final Map<String, String> transportes = {
+    'A PÉ': 'A_PE',
+    'AÉREO': 'AEREO',
+    'FERROVIÁRIO': 'FERROVIARIO',
+    'MARÍTIMO/FLUVIAL': 'MARITIMO_FLUVIAL',
+    'RODOVIÁRIO': 'RODOVIARIO',
+  };
+
 
   @override
   void dispose() {
     _lacreController.dispose();
     _dateController.dispose();
     super.dispose();
+  }
+
+  void initState() {
+    super.initState();
+    controller.loadTiposSubprodutosList();
   }
 
   // --- Funções para Lacres ---
@@ -105,12 +125,12 @@ class _DetalhesStep3PageState extends State<DetalhesStep3Page> {
                     labelText: 'Transporte',
                     border: OutlineInputBorder(),
                   ),
-                  items: ['A pé', 'Aéreo', 'Ferroviário', 'Maritimo/fluvial', 'Rodoviário']
-                      .map((label) => DropdownMenuItem(
-                    value: label,
-                    child: Text(label),
-                  ))
-                      .toList(),
+                  items: transportes.entries.map((entry) {
+                    return DropdownMenuItem<String>(
+                      value: entry.value, // valor que será salvo
+                      child: Text(entry.key), // texto visível
+                    );
+                  }).toList(),
                   onChanged: (value) {
                     setState(() {
                       _selectedTransporte = value;
@@ -161,6 +181,7 @@ class _DetalhesStep3PageState extends State<DetalhesStep3Page> {
                       String formattedDate = "${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}";
                       setState(() {
                         _dateController.text = formattedDate;
+                        _dataSelecionada = pickedDate;
                       });
                     }
                   },
@@ -234,6 +255,18 @@ class _DetalhesStep3PageState extends State<DetalhesStep3Page> {
                           // Adicione validação específica para esta etapa se necessário
                           // Ex: if (!_aceitoTermos) { ... show error ... return; }
                           if (_formKey.currentState!.validate()) {
+                            final controller = Modular.get<GtsEmissaoController>();
+
+                            controller.gtsFormData[controller.currentGtsIndex].addAll({
+                              'tipoSubproduto': _selectedTipoGts,
+                              'transporte': _selectedTransporte,
+                              'finalidade': _selectedFinalidade,
+                              'dataValidade': _dataSelecionada,
+                              'lacre': _lacresAdicionados,
+                            });
+
+
+                            controller.markStepAsCompleted(2); // marca step como concluído
                             widget.onNextPressed!();
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(

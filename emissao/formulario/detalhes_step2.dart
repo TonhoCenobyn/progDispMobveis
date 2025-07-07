@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_modular/flutter_modular.dart';
+
+import '../gts_emissao_controller.dart';
 
 class DetalhesStep2Page extends StatefulWidget {
   // Callbacks para navegação
@@ -19,7 +22,31 @@ class DetalhesStep2Page extends StatefulWidget {
 class _DetalhesStep2PageState extends State<DetalhesStep2Page> {
   bool _isUrgente = false;
   String? _selectedPrioridade;
+  final _nomeFantasiaDestinoController = TextEditingController();
+  final _cpfCnpjDestinoController = TextEditingController();
+  final _inscricaoEstadualDestinoController = TextEditingController();
+  final _cepController = TextEditingController();
+  final _logradouroController = TextEditingController();
+  final _numeroController = TextEditingController();
+  final _complementoController = TextEditingController();
+  final _municipioController = TextEditingController();
+  final _ufController = TextEditingController();
+
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _nomeFantasiaDestinoController.dispose();
+    _cpfCnpjDestinoController.dispose();
+    _inscricaoEstadualDestinoController.dispose();
+    _cepController.dispose();
+     _logradouroController.dispose();
+    _numeroController.dispose();
+    _complementoController.dispose();
+    _municipioController.dispose();
+    _ufController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +65,7 @@ class _DetalhesStep2PageState extends State<DetalhesStep2Page> {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
+                  controller: _nomeFantasiaDestinoController,
                   decoration: const InputDecoration(
                     labelText: 'Nome Fantasia',
                     border: OutlineInputBorder(),
@@ -46,6 +74,7 @@ class _DetalhesStep2PageState extends State<DetalhesStep2Page> {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
+                  controller: _cpfCnpjDestinoController,
                   decoration: const InputDecoration(
                     labelText: 'CPF/CNPJ',
                     border: OutlineInputBorder(),
@@ -57,6 +86,7 @@ class _DetalhesStep2PageState extends State<DetalhesStep2Page> {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
+                  controller: _inscricaoEstadualDestinoController,
                   decoration: const InputDecoration(
                     labelText: 'Inscrição Estadual',
                     border: OutlineInputBorder(),
@@ -68,6 +98,7 @@ class _DetalhesStep2PageState extends State<DetalhesStep2Page> {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
+                  controller: _cepController,
                   decoration: const InputDecoration(
                     labelText: 'CEP',
                     border: OutlineInputBorder(),
@@ -79,6 +110,7 @@ class _DetalhesStep2PageState extends State<DetalhesStep2Page> {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
+                  controller: _logradouroController,
                   decoration: const InputDecoration(
                     labelText: 'Logradouro',
                     border: OutlineInputBorder(),
@@ -87,6 +119,7 @@ class _DetalhesStep2PageState extends State<DetalhesStep2Page> {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
+                  controller: _numeroController,
                   decoration: const InputDecoration(
                     labelText: 'Número',
                     border: OutlineInputBorder(),
@@ -98,6 +131,7 @@ class _DetalhesStep2PageState extends State<DetalhesStep2Page> {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
+                  controller: _complementoController,
                   decoration: const InputDecoration(
                     labelText: 'Complemento',
                     border: OutlineInputBorder(),
@@ -106,6 +140,7 @@ class _DetalhesStep2PageState extends State<DetalhesStep2Page> {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
+                  controller: _municipioController,
                   decoration: const InputDecoration(
                     labelText: 'Município',
                     border: OutlineInputBorder(),
@@ -114,6 +149,7 @@ class _DetalhesStep2PageState extends State<DetalhesStep2Page> {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
+                  controller: _ufController,
                   decoration: const InputDecoration(
                     labelText: 'Estado',
                     border: OutlineInputBorder(),
@@ -125,7 +161,6 @@ class _DetalhesStep2PageState extends State<DetalhesStep2Page> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Botão Voltar (sempre presente a partir da etapa 2)
                     ElevatedButton.icon(
                       icon: const Icon(Icons.arrow_back),
                       label: const Text('Voltar'),
@@ -135,7 +170,6 @@ class _DetalhesStep2PageState extends State<DetalhesStep2Page> {
                       ),
                     ),
 
-                    // Botão Avançar (presente se não for a última etapa)
                     if (widget.onNextPressed != null)
                       ElevatedButton.icon(
                         icon: const Icon(Icons.arrow_forward),
@@ -143,6 +177,24 @@ class _DetalhesStep2PageState extends State<DetalhesStep2Page> {
                         onPressed: () {
                           // Valida o formulário antes de avançar
                           if (_formKey.currentState!.validate()) {
+                            final controller = Modular.get<GtsEmissaoController>();
+
+                            controller.gtsFormData[controller.currentGtsIndex].addAll({
+                              'destinoNomeFantasia': _nomeFantasiaDestinoController.text,
+                              'destinoCpfCnpj': _cpfCnpjDestinoController.text,
+                              'destinoInscricaoEstadual': _inscricaoEstadualDestinoController.text,
+                              'destinoCep': _cepController.text,
+                              'destinoLogradouro': _logradouroController.text,
+                              'destinoNumero': _numeroController.text,
+                              'destinoComplemento': _complementoController.text,
+                              'destinoMunicipio': _municipioController.text,
+                              'destinoUF': _ufController.text,
+                            });
+
+                            print('Dados salvos no gtsFormData:');
+                            print(controller.gtsFormData[controller.currentGtsIndex]);
+
+                            controller.markStepAsCompleted(1); // marca step como concluído
                             widget.onNextPressed!();
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(

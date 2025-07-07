@@ -29,6 +29,11 @@ class _GtsHomePageState extends State<GtsHomePage> {
         "./emissao",
         Icons.people_outlined,
       ),
+      PdsaCategoryPage.icon(
+        "Histórico GTS",
+        "./historico",
+        Icons.people_outlined,
+      )
     ];
   }
 

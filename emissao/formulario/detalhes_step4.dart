@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_modular/flutter_modular.dart';
+
+import '../gts_emissao_controller.dart';
 
 class DetalhesStep4Page extends StatefulWidget {
   // Callbacks para navegação
@@ -21,6 +24,11 @@ class _DetalhesStep4PageState extends State<DetalhesStep4Page> {
   String? _filePath;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _timeController = TextEditingController();
+  final _descricaoController = TextEditingController();
+  final _unidadeMedidaController = TextEditingController();
+  final _quantidadeController = TextEditingController();
+  final _pesoController = TextEditingController();
+  final _loteController = TextEditingController();
 
   @override
   void dispose() {
@@ -45,6 +53,7 @@ class _DetalhesStep4PageState extends State<DetalhesStep4Page> {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
+                  controller: _descricaoController,
                   decoration: const InputDecoration(
                     labelText: 'Descrição Resumida *',
                     border: OutlineInputBorder(),
@@ -60,6 +69,7 @@ class _DetalhesStep4PageState extends State<DetalhesStep4Page> {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
+                  controller: _unidadeMedidaController,
                   decoration: const InputDecoration(
                     labelText: 'Unidade de medida',
                     border: OutlineInputBorder(),
@@ -68,6 +78,7 @@ class _DetalhesStep4PageState extends State<DetalhesStep4Page> {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
+                  controller: _quantidadeController,
                   decoration: const InputDecoration(
                     labelText: 'Quantidade',
                     border: OutlineInputBorder(),
@@ -79,6 +90,7 @@ class _DetalhesStep4PageState extends State<DetalhesStep4Page> {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
+                  controller: _pesoController,
                   decoration: const InputDecoration(
                     labelText: 'Peso',
                     border: OutlineInputBorder(),
@@ -90,6 +102,7 @@ class _DetalhesStep4PageState extends State<DetalhesStep4Page> {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
+                  controller: _loteController,
                   decoration: const InputDecoration(
                     labelText: 'Lote',
                     border: OutlineInputBorder(),
@@ -97,7 +110,7 @@ class _DetalhesStep4PageState extends State<DetalhesStep4Page> {
                   keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 24),
-                const SizedBox(height: 32), // Espaço antes dos botões
+                const SizedBox(height: 32),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -116,9 +129,22 @@ class _DetalhesStep4PageState extends State<DetalhesStep4Page> {
                       icon: const Icon(Icons.check_circle_outline),
                       label: const Text('Finalizar Emissão'),
                       onPressed: () {
-                        // Valida o formulário antes de finalizar
                         if (_formKey.currentState!.validate()) {
-                          widget.onFinishPressed?.call(); // Chama o callback de finalizar
+                          final controller = Modular.get<GtsEmissaoController>();
+
+                          controller.gtsFormData[controller.currentGtsIndex].addAll({
+                            'descricao':_descricaoController.text,
+                            'unidadeMedida': _unidadeMedidaController.text,
+                            'quantidade': _quantidadeController.text,
+                            'peso': _pesoController.text,
+                            'lote': _loteController.text,
+                          });
+
+                          print('Dados salvos no gtsFormData:');
+                          print(controller.gtsFormData[controller.currentGtsIndex]);
+
+                          controller.markStepAsCompleted(3); // marca step como concluído
+                          widget.onFinishPressed?.call();
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Por favor, preencha os campos obrigatórios desta etapa.')),
